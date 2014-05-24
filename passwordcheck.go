@@ -40,7 +40,7 @@ type Policy struct {
 	//
 	// Min[2] is used for passphrases. Note that besides meeting this
 	// length requirement, a passphrase must also consist of a sufficient
-	// number of words (see the "passphrase" option below).
+	// number of words (see the PassphraseWords option below).
 	//
 	// Min[3] and Min[4] are used for passwords consisting of characters
 	// from three and four character classes, respectively.
@@ -52,8 +52,8 @@ type Policy struct {
 	// too long for some system services.
 	Max int
 
-	// PassphraseWords is the number of words required for a passphrase, or
-	// 0 to disable the support for user-chosen passphrases.
+	// PassphraseWords is the number of words required for a passphrase.
+	// Set to 0 to disable the support for user-chosen passphrases.
 	PassphraseWords int
 
 	// MatchLength is the length of common substring required to conclude
