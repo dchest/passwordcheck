@@ -3,7 +3,13 @@
 
 package passwordcheck
 
-import "testing"
+import (
+	"bufio"
+	"compress/gzip"
+	"fmt"
+	"os"
+	"testing"
+)
 
 func TestCheck(t *testing.T) {
 	p0 := "password1"
@@ -55,4 +61,40 @@ func TestErrReturn(t *testing.T) {
 	if err != ErrSimilar {
 		t.Errorf("expected ErrSimilar, got %v", err)
 	}
+}
+
+func checkPasswordsFromFile(t *testing.T, filename string) {
+	fmt.Printf("[INFO] Checking common passwords from %s\n", filename)
+	f, err := os.Open(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	z, err := gzip.NewReader(f)
+	defer z.Close()
+	scanner := bufio.NewScanner(z)
+	numRead := 0
+	numRejected := 0
+	rejections := make(map[error]int)
+	for scanner.Scan() {
+		pw := scanner.Text()
+		if r := DefaultPolicy.Check([]byte(pw), nil, nil); r != nil {
+			rejections[r]++
+			numRejected++
+		} else {
+			fmt.Printf("[INFO] Accepted password: %q\n", pw)
+		}
+		numRead++
+	}
+	if err := scanner.Err(); err != nil {
+		t.Fatal(err)
+	}
+	for k, v := range rejections {
+		fmt.Printf("[INFO] %d passwords: %s\n", v, k)
+	}
+	fmt.Printf("[INFO] Rejected %d of %d passwords\n", numRejected, numRead)
+}
+
+func TestCommonPasswords(t *testing.T) {
+	checkPasswordsFromFile(t, "testdata/passwords.txt.gz")
 }

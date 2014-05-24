@@ -1,0 +1,8 @@
+passwords.txt.gz includes a combined list of common passwords,
+sorted alphabetically, from these sources:
+
+* List of 10,000 most common passwords
+  from https://xato.net/passwords/more-top-worst-passwords/
+
+* List of common passwords from
+  http://www.openwall.com/passwords/wordlists/password-2011.lst
