@@ -15,6 +15,37 @@ package passwordcheck
 import "C"
 import "errors"
 
+type Error struct {
+	reason *C.char
+	desc   string
+}
+
+func (e *Error) Error() string {
+	return e.desc
+}
+
+var errorsByReason = make(map[*C.char]*Error)
+
+func newError(reason *C.char) *Error {
+	e := &Error{reason, "passwordcheck: " + C.GoString(reason)}
+	errorsByReason[reason] = e
+	return e
+}
+
+var (
+	ErrEmpty       = errors.New("empty password")
+	ErrFailed      = newError(C.REASON_ERROR)       // check failed
+	ErrSame        = newError(C.REASON_SAME)        // same as the old one
+	ErrSimilar     = newError(C.REASON_SIMILAR)     // based on the old one
+	ErrShort       = newError(C.REASON_SHORT)       // too short
+	ErrLong        = newError(C.REASON_LONG)        // too long
+	ErrSimpleShort = newError(C.REASON_SIMPLESHORT) // not enough different characters or classes for this length
+	ErrSimple      = newError(C.REASON_SIMPLE)      // not enough different characters of classes
+	ErrPersonal    = newError(C.REASON_PERSONAL)    // based on user name
+	ErrWord        = newError(C.REASON_WORD)        // based on a directionary word and not a passphrase
+	ErrSeq         = newError(C.REASON_SEQ)         // based on a common sequence of characters and not a passphrase
+)
+
 // Policy describes a password strength policy.
 type Policy struct {
 	// Min declares the minimum allowed password lengths for different
@@ -89,7 +120,7 @@ var DefaultPolicy = &Policy{
 // the old one.
 func (p *Policy) Check(newPassword, oldPassword, username []byte) error {
 	if newPassword == nil {
-		return errors.New("passwordcheck: empty new password")
+		return ErrEmpty
 	}
 	np := C.CString(string(newPassword))
 	defer C.passwdqc_free(np)
@@ -116,9 +147,12 @@ func (p *Policy) Check(newPassword, oldPassword, username []byte) error {
 		params.similar_deny = 0
 	}
 
-	result := C.passwdqc_check(&params, np, op, u)
-	if result != nil {
-		return errors.New("passwordcheck: " + C.GoString(result))
+	reason := C.passwdqc_check(&params, np, op, u)
+	if reason != nil {
+		if err, ok := errorsByReason[reason]; ok {
+			return err
+		}
+		return &Error{reason, C.GoString(reason)}
 	}
 	return nil
 }

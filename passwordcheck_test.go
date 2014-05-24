@@ -45,3 +45,14 @@ func TestDisabled(t *testing.T) {
 		t.Errorf("no error expected, got %s", err)
 	}
 }
+
+func TestErrReturn(t *testing.T) {
+	err := DefaultPolicy.Check([]byte("pass"), nil, nil)
+	if err != ErrShort {
+		t.Errorf("expected ErrShort, got %v", err)
+	}
+	err = DefaultPolicy.Check([]byte("JJJRedRyIdHCJQ131"), []byte("131QJCHdIyRdeRJJJ"), nil)
+	if err != ErrSimilar {
+		t.Errorf("expected ErrSimilar, got %v", err)
+	}
+}
