@@ -113,7 +113,8 @@ var DefaultPolicy = &Policy{
 	DenySimilar:     true,
 }
 
-// Check checks that the new password complies with the policy.
+// Check checks that the new password complies with the policy and returns nil
+// if it does, and Error if not.
 //
 // If old password or user name are not nil, the are also used for checking,
 // for example, to make sure that the new password sufficiently differs from
