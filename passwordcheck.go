@@ -1,5 +1,8 @@
 // Go code written in 2014 by Dmitry Chestnykh.
 // See LICENSE file.
+//
+// Documentation for Policy based on text by Solar Designer, taken from
+// http://www.openwall.com/passwdqc/README.shtml.
 
 // Package passwordcheck is a password and passphrase strength checker based on
 // passwdqc (http://www.openwall.com/passwdqc/).
