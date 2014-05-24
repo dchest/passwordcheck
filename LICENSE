@@ -1,3 +1,15 @@
+Go package written in 2014 by Dmitry Chestnykh.
+
+To the extent possible under law, the author have dedicated all copyright
+and related and neighboring rights to this software to the public domain
+worldwide. This software is distributed without any warranty.
+http://creativecommons.org/publicdomain/zero/1.0/
+
+This package is based on passwdqc.
+http://www.openwall.com/passwdqc/
+
+passwdqc license:
+
 Two manual pages (pam_passwdqc.8 and passwdqc.conf.5) are under the
 3-clause BSD-style license as specified within the files themselves.
 
