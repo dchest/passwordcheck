@@ -240,7 +240,7 @@ static void burn(void *v, size_t n)
 	while( n-- ) *p++ = 0;
 }
 
-static void clean(char *dst)
+void passwdqc_free(char *dst)
 {
 	if (dst) {
 		burn(dst, strlen(dst));
@@ -298,7 +298,7 @@ static int is_based(const passwdqc_params_qc_t *params,
 				/* add credit for match_length - 1 chars */
 				bias = params->match_length - 1;
 				if (is_simple(params, scratch, bias, bias)) {
-					clean(scratch);
+					passwdqc_free(scratch);
 					return 1;
 				}
 			} else { /* discount */
@@ -342,7 +342,7 @@ next_match_length:
 		;
 	}
 
-	clean(scratch);
+	passwdqc_free(scratch);
 
 	return 0;
 }
@@ -518,11 +518,11 @@ const char *passwdqc_check(const passwdqc_params_qc_t *params,
 		reason = is_word_based(params, u_reversed, newpass, 0x100);
 
 out:
-	memset(truncated, 0, sizeof(truncated));
-	clean(u_newpass);
-	clean(u_reversed);
-	clean(u_oldpass);
-	clean(u_name);
+	burn(truncated, sizeof(truncated));
+	passwdqc_free(u_newpass);
+	passwdqc_free(u_reversed);
+	passwdqc_free(u_oldpass);
+	passwdqc_free(u_name);
 
 	return reason;
 }

@@ -10,14 +10,10 @@
 // Currently implemented via a CGO-binding to a modified passwdqc.
 package passwordcheck
 
-// #include <stdlib.h>   // for free
 // #include <limits.h>   // for INT_MAX
 // #include "passwdqc.h"
 import "C"
-import (
-	"errors"
-	"unsafe"
-)
+import "errors"
 
 // Policy describes a password strength policy.
 type Policy struct {
@@ -96,15 +92,15 @@ func (p *Policy) Check(newPassword, oldPassword, username []byte) error {
 		return errors.New("passwordcheck: empty new password")
 	}
 	np := C.CString(string(newPassword))
-	defer C.free(unsafe.Pointer(np))
+	defer C.passwdqc_free(np)
 	var op, u *C.char
 	if oldPassword != nil {
 		op = C.CString(string(oldPassword))
-		defer C.free(unsafe.Pointer(op))
+		defer C.passwdqc_free(op)
 	}
 	if username != nil {
 		u = C.CString(string(username))
-		defer C.free(unsafe.Pointer(u))
+		defer C.passwdqc_free(u)
 	}
 	// Copy parameters.
 	var params C.passwdqc_params_qc_t
