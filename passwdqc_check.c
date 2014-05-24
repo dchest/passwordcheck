@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <pwd.h>
 
 #include "passwdqc.h"
 #include "wordset_4k.h"
@@ -442,18 +441,18 @@ static const char *is_word_based(const passwdqc_params_qc_t *params,
 }
 
 const char *passwdqc_check(const passwdqc_params_qc_t *params,
-    const char *newpass, const char *oldpass, const struct passwd *pw)
+    const char *newpass, const char *oldpass, const char *name)
 {
 	char truncated[9];
 	char *u_newpass, *u_reversed;
 	char *u_oldpass;
-	char *u_name, *u_gecos, *u_dir;
+	char *u_name;
 	const char *reason;
 	int length;
 
 	u_newpass = u_reversed = NULL;
 	u_oldpass = NULL;
-	u_name = u_gecos = u_dir = NULL;
+	u_name = NULL;
 
 	reason = REASON_ERROR;
 
@@ -497,12 +496,8 @@ const char *passwdqc_check(const passwdqc_params_qc_t *params,
 		goto out;
 	if (oldpass && !(u_oldpass = unify(NULL, oldpass)))
 		goto out;
-	if (pw) {
-		if (!(u_name = unify(NULL, pw->pw_name)) ||
-		    !(u_gecos = unify(NULL, pw->pw_gecos)) ||
-		    !(u_dir = unify(NULL, pw->pw_dir)))
-			goto out;
-	}
+	if (name && !(u_name = unify(NULL, name)))
+		goto out;
 
 	if (oldpass && params->similar_deny &&
 	    (is_based(params, u_oldpass, u_newpass, newpass, 0) ||
@@ -511,13 +506,9 @@ const char *passwdqc_check(const passwdqc_params_qc_t *params,
 		goto out;
 	}
 
-	if (pw &&
+	if (name &&
 	    (is_based(params, u_name, u_newpass, newpass, 0) ||
-	     is_based(params, u_name, u_reversed, newpass, 0x100) ||
-	     is_based(params, u_gecos, u_newpass, newpass, 0) ||
-	     is_based(params, u_gecos, u_reversed, newpass, 0x100) ||
-	     is_based(params, u_dir, u_newpass, newpass, 0) ||
-	     is_based(params, u_dir, u_reversed, newpass, 0x100))) {
+	     is_based(params, u_name, u_reversed, newpass, 0x100))) {
 		reason = REASON_PERSONAL;
 		goto out;
 	}
@@ -532,8 +523,6 @@ out:
 	clean(u_reversed);
 	clean(u_oldpass);
 	clean(u_name);
-	clean(u_gecos);
-	clean(u_dir);
 
 	return reason;
 }
