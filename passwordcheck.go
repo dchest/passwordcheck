@@ -88,7 +88,7 @@ var DefaultPolicy = &Policy{
 
 // Check checks that the new password complies with the policy.
 //
-// If old password and user name are not nil, the are also used for checking,
+// If old password or user name are not nil, the are also used for checking,
 // for example, to make sure that the new password sufficiently differs from
 // the old one.
 func (p *Policy) Check(newPassword, oldPassword, username []byte) error {
