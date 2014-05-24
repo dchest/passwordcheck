@@ -235,10 +235,16 @@ static char *reverse(const char *src)
 	return dst;
 }
 
+static void burn(void *v, size_t n)
+{
+	volatile unsigned char *p = ( volatile unsigned char * )v;
+	while( n-- ) *p++ = 0;
+}
+
 static void clean(char *dst)
 {
 	if (dst) {
-		memset(dst, 0, strlen(dst));
+		burn(dst, strlen(dst));
 		free(dst);
 	}
 }
