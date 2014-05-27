@@ -98,3 +98,74 @@ func checkPasswordsFromFile(t *testing.T, filename string) {
 func TestCommonPasswords(t *testing.T) {
 	checkPasswordsFromFile(t, "testdata/passwords.txt.gz")
 }
+
+func TestParsePolicy(t *testing.T) {
+	vectors := []struct {
+		s string
+		p *Policy
+	}{
+		{
+			"min=disabled,16,17,18,19 max=20 passphrase=21 match=22 similar=deny",
+			&Policy{
+				Min:             [5]int{Disabled, 16, 17, 18, 19},
+				Max:             20,
+				PassphraseWords: 21,
+				MatchLength:     22,
+				DenySimilar:     true,
+			},
+		},
+		{
+			"min=10,disabled,111,1222,13 max=12345 passphrase=9876 match=1 similar=permit",
+			&Policy{
+				Min:             [5]int{10, Disabled, 111, 1222, 13},
+				Max:             12345,
+				PassphraseWords: 9876,
+				MatchLength:     1,
+				DenySimilar:     false,
+			},
+		},
+		{
+			"min=10,disabled,111,1222,13\nmax=12345\npassphrase=9876\nmatch=1\nsimilar=permit",
+			&Policy{
+				Min:             [5]int{10, Disabled, 111, 1222, 13},
+				Max:             12345,
+				PassphraseWords: 9876,
+				MatchLength:     1,
+				DenySimilar:     false,
+			},
+		},
+	}
+
+	for i, v := range vectors {
+		p, err := ParsePolicy(v.s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if *p != *v.p {
+			t.Errorf("%d: incorrect parsing: expected %v, got %v", i, v.p, p)
+		}
+	}
+}
+
+func TestParsePolicyErrors(t *testing.T) {
+	vectors := []string{
+		"",
+		" ",
+		"\n",
+		"max=similar=deny",
+		"min=",
+		"min=disabled,16,17,18",
+		"min=dosabled,16,17,18,19 max=20 passphrase=21 match=22 similar=deny",
+		"min=10,disabled,111,1222,13 max=0x12345 passphrase=9876 match=1 similar=permit",
+		"min=10,disabled,111,1222,13 max=12345 passphrase=what match=1 similar=permit",
+		"min=10,disabled,111,1222,13 max=12345 passphrase=1 match= similar=permit",
+		"min=10,disabled,111,1222,13 max=12345 passphrase=1 match= similar=no",
+		"min=10,disabled,111,1222,13 max=12345 passphrase=1 match= similar=no",
+	}
+	for i, v := range vectors {
+		_, err := ParsePolicy(v)
+		if err == nil {
+			t.Errorf("%d: expected error", i)
+		}
+	}
+}

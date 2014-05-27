@@ -13,7 +13,12 @@ package passwordcheck
 // #include <limits.h>   // for INT_MAX
 // #include "passwdqc.h"
 import "C"
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type Error struct {
 	reason *C.char
@@ -156,4 +161,78 @@ func (p *Policy) Check(newPassword, oldPassword, username []byte) error {
 		return &Error{reason, C.GoString(reason)}
 	}
 	return nil
+}
+
+// ParsePolicy parses a string describing password policy.
+// The format is similar to passwdqc, but a bit relaxed:
+//
+//  min=N0,N1,N2,N3,N4        default: min=disabled,24,11,8,7
+//  max=N                     default: max=40
+//  passphrase=N              default: passphrase=3
+//  match=N                   default: match=4
+//  similar=permit|deny       default: similar=deny
+//
+// Configuration items can be separated by a new line or by space,
+// for example:
+//
+//  min=disabled,16,17,18,19 max=20 passphrase=21 match=22 similar=deny
+//
+// The order of items is not important.
+// There must be no spaces or excess commas between min values.
+// Items not present in the string are filled from DefaultPolicy.
+func ParsePolicy(config string) (p *Policy, err error) {
+	p = new(Policy)
+	*p = *DefaultPolicy
+	config = strings.Replace(config, "\r\n", " ", -1)
+	config = strings.Replace(config, "\n", " ", -1)
+	items := strings.Split(config, " ")
+	for _, it := range items {
+		nameValue := strings.SplitN(strings.TrimSpace(it), "=", 2)
+		if len(nameValue) != 2 {
+			return nil, fmt.Errorf("error parsing item: %q", it)
+		}
+		name, value := nameValue[0], nameValue[1]
+		switch name {
+		case "min":
+			vals := strings.Split(value, ",")
+			if len(vals) != 5 {
+				return nil, fmt.Errorf("error parsing item: %q (expected 5 comma-separated values)", it)
+			}
+			for i, v := range vals {
+				if v == "disabled" {
+					p.Min[i] = Disabled
+				} else {
+					p.Min[i], err = strconv.Atoi(v)
+					if err != nil {
+						return nil, fmt.Errorf("error parsing item: %q (%s)", it, err)
+					}
+				}
+			}
+		case "max":
+			p.Max, err = strconv.Atoi(value)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing item: %q (%s)", it, err)
+			}
+		case "passphrase":
+			p.PassphraseWords, err = strconv.Atoi(value)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing item: %q (%s)", it, err)
+			}
+		case "match":
+			p.MatchLength, err = strconv.Atoi(value)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing item: %q (%s)", it, err)
+			}
+		case "similar":
+			switch value {
+			case "deny":
+				p.DenySimilar = true
+			case "permit":
+				p.DenySimilar = false
+			default:
+				return nil, fmt.Errorf("error parsing item: %q (unknown value %q)", it, value)
+			}
+		}
+	}
+	return p, nil
 }
