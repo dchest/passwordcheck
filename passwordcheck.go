@@ -232,6 +232,8 @@ func ParsePolicy(config string) (p *Policy, err error) {
 			default:
 				return nil, fmt.Errorf("error parsing item: %q (unknown value %q)", it, value)
 			}
+		default:
+			return nil, fmt.Errorf("unrecognized name: %q", name)
 		}
 	}
 	return p, nil

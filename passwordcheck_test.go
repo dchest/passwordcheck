@@ -161,11 +161,12 @@ func TestParsePolicyErrors(t *testing.T) {
 		"min=10,disabled,111,1222,13 max=12345 passphrase=1 match= similar=permit",
 		"min=10,disabled,111,1222,13 max=12345 passphrase=1 match= similar=no",
 		"min=10,disabled,111,1222,13 max=12345 passphrase=1 match= similar=no",
+		"max=123 blah=1",
 	}
 	for i, v := range vectors {
 		_, err := ParsePolicy(v)
 		if err == nil {
-			t.Errorf("%d: expected error", i)
+			t.Errorf("%d: expected error for %q", i, v)
 		}
 	}
 }
